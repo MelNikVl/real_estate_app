@@ -16,7 +16,8 @@ function App() {
 
     try {
       // Важно: ваш FastAPI бэкенд запущен на localhost:8000
-      const response = await fetch(`http://backend:8000/estimate?address=${encodeURIComponent(address)}`);
+      const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'; // Fallback for local dev
+      const response = await fetch(`${API_BASE_URL}/estimate?address=${encodeURIComponent(address)}`);
 
       if (!response.ok) {
         const errorData = await response.json();
