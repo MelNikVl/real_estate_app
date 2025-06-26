@@ -16,7 +16,7 @@ function App() {
 
     try {
       // Важно: ваш FastAPI бэкенд запущен на localhost:8000
-      const response = await fetch(`http://localhost:8000/estimate?address=${encodeURIComponent(address)}`);
+      const response = await fetch(`http://backend:8000/estimate?address=${encodeURIComponent(address)}`);
 
       if (!response.ok) {
         const errorData = await response.json();

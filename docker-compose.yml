@@ -24,5 +24,12 @@ services:
     environment:
       DATABASE_URL: postgresql://user:password@db:5432/real_estate_db # Переменная для подключения к БД
 
+  frontend: # ДОБАВЬ ЭТОТ БЛОК!
+    build: ./frontend # Указывает Docker'у, где искать Dockerfile для фронтенда
+    ports:
+      - "80:80" # Пробрасываем порт Nginx на хост (стандартный HTTP порт)
+    depends_on:
+      - backend # Фронтенд зависит от бэкенда
+
 volumes:
   db_data: # Объявляем именованный том для сохранения данных БД
