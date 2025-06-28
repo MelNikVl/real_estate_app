@@ -11,6 +11,13 @@ services:
       - db_data:/var/lib/postgresql/data
     ports:
       - "5432:5432" # Опционально: пробрасываем порт БД на хост для удобства отладки
+    # ДОБАВЛЕНО: Проверка здоровья базы данных
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d real_estate_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s # Дать БД немного времени на запуск перед первой проверкой
 
   backend:
     build: ./backend
@@ -19,15 +26,18 @@ services:
       - ./backend:/app # Монтируем директорию с кодом для горячей перезагрузки
     ports:
       - "8000:8000" # Пробрасываем порт FastAPI на хост
-    depends_on:
-      - db # Указываем, что бэкенд зависит от БД
     environment:
       DATABASE_URL: postgresql://user:password@db:5432/real_estate_db # Переменная для подключения к БД
+    # ИЗМЕНЕНО: Зависимость от базы данных теперь ждет, пока БД будет здорова
+    depends_on:
+      db:
+        condition: service_healthy # ОЖИДАЕТ, ПОКА DB БУДЕТ ГОТОВА И ПРИНИМАТЬ СОЕДИНЕНИЯ!
 
-  frontend: # ДОБАВЬ ЭТОТ БЛОК!
+  frontend:
     build: ./frontend # Указывает Docker'у, где искать Dockerfile для фронтенда
     ports:
       - "80:80" # Пробрасываем порт Nginx на хост (стандартный HTTP порт)
+    # ДОБАВЛЕНО: Зависимость от бэкенда
     depends_on:
       - backend # Фронтенд зависит от бэкенда
 

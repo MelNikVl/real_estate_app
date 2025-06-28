@@ -1,0 +1,4 @@
+import requests
+
+resp = requests.get("https://catalog.data.gov/api/3/action/package_search?q=real+estate")
+print(resp.json())
