@@ -1,4 +1,16 @@
 import requests
+import json
 
-resp = requests.get("https://catalog.data.gov/api/3/action/package_search?q=real+estate")
-print(resp.json())
+url = "https://catalog.data.gov/api/3/action/package_search?q=real+estate"
+resp = requests.get(url)
+
+if resp.status_code == 200:
+    data = resp.json()
+    
+    # Сохраняем в читаемом виде
+    with open("real_estate_data.txt", "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2, ensure_ascii=False)
+    
+    print("✅ Данные успешно сохранены в real_estate_data.txt")
+else:
+    print(f"❌ Ошибка запроса: {resp.status_code}")
