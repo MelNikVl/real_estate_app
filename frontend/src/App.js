@@ -1,7 +1,7 @@
 // real_estate_app/frontend/src/App.js
 
 import React, { useState, useEffect, useRef } from 'react';
-import './App.css'; 
+import './App.css';
 
 function App() {
   const [address, setAddress] = useState('');
@@ -14,7 +14,7 @@ function App() {
   // Используйте process.env.REACT_APP_GOOGLE_API_KEY для вашего ключа Google API
   // Убедитесь, что вы создали файл .env.development в папке frontend
   // с REACT_APP_GOOGLE_API_KEY=ВАШ_КЛЮЧ
-  const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY; 
+  const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
 
   // Реф для дебаунсинга запросов к Google API
   const debounceTimeoutRef = useRef(null);
@@ -31,7 +31,7 @@ function App() {
 
     setLoading(true);
     setError(null);
-    setEstimate(null); 
+    setEstimate(null);
     setSuggestions([]); // Очищаем подсказки после отправки запроса
     setShowSuggestions(false); // Скрываем подсказки
 
@@ -68,15 +68,23 @@ function App() {
     try {
       // Endpoint для Places Autocomplete API
       const googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&components=country:us&key=${GOOGLE_API_KEY}`;
-      
+
       const response = await fetch(googlePlacesUrl);
       const data = await response.json();
 
-      if (data.status === 'OK') {
+      if (data.status === 'OK' && data.predictions && data.predictions.length > 0) {
+        // Убедимся, что есть предсказания
         setSuggestions(data.predictions.map(prediction => prediction.description));
         setShowSuggestions(true);
-      } else {
-        console.error("Google Places API error:", data.status, data.error_message);
+      } else if (data.status === 'ZERO_RESULTS') {
+        // Если результатов нет, но запрос успешен
+        console.log("Google Places API: No results for this input.");
+        setSuggestions([]);
+        setShowSuggestions(false);
+      }
+      else {
+        // Обработка других статусов ошибок от Google API
+        console.error("Google Places API error:", data.status, data.error_message || "Unknown error");
         setSuggestions([]);
         setShowSuggestions(false);
       }
@@ -91,7 +99,7 @@ function App() {
   const handleAddressInputChange = (e) => {
     const input = e.target.value;
     setAddress(input);
-    
+
     // Очищаем предыдущий таймаут
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -109,7 +117,7 @@ function App() {
     setSuggestions([]); // Очищаем список подсказок
     setShowSuggestions(false); // Скрываем список
     // Можно сразу же запросить оценку для выбранного адреса
-    // fetchEstimate(selectedSuggestion); 
+    // fetchEstimate(selectedSuggestion);
   };
 
   // Функция для парсинга истории продаж (без изменений)
@@ -118,7 +126,7 @@ function App() {
       return JSON.parse(jsonString);
     } catch (e) {
       console.error("Failed to parse sale history JSON:", e);
-      return {}; 
+      return {};
     }
   };
 
@@ -132,14 +140,14 @@ function App() {
             placeholder="Введите адрес (например, 5500 Grand Lake Dr, San Antonio, TX 78244)"
             value={address}
             onChange={handleAddressInputChange} // Используем новый обработчик
-            onFocus={() => address.trim() && setSuggestions([]) && fetchSuggestions(address)} // Показываем подсказки при фокусе, если что-то уже введено
+            onFocus={() => address.trim() && fetchSuggestions(address)} // Показываем подсказки при фокусе, если что-то уже введено
             onBlur={() => setTimeout(() => setShowSuggestions(false), 100)} // Скрываем подсказки с небольшой задержкой
-            style={{ 
-              padding: '12px 15px', 
-              width: '100%', 
+            style={{
+              padding: '12px 15px',
+              width: '100%',
               marginRight: '15px', // Убрал, т.к. теперь в flex-col
-              borderRadius: '8px', 
-              border: '1px solid #a0a0a0', 
+              borderRadius: '8px',
+              border: '1px solid #a0a0a0',
               boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
               fontSize: '16px',
               boxSizing: 'border-box' // Важно для правильной ширины
@@ -162,8 +170,8 @@ function App() {
               zIndex: 100 // Чтобы список был поверх других элементов
             }}>
               {suggestions.map((suggestion, index) => (
-                <li 
-                  key={index} 
+                <li
+                  key={index}
                   onClick={() => handleSelectSuggestion(suggestion)}
                   style={{
                     padding: '10px 15px',
@@ -182,14 +190,14 @@ function App() {
         </div>
         <button
           onClick={() => fetchEstimate()} // Теперь вызываем оценку только по кнопке
-          disabled={loading || !address.trim()} 
-          style={{ 
-            padding: '12px 25px', 
-            backgroundColor: '#28a745', 
-            color: 'white', 
-            border: 'none', 
-            borderRadius: '8px', 
-            cursor: 'pointer', 
+          disabled={loading || !address.trim()}
+          style={{
+            padding: '12px 25px',
+            backgroundColor: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '8px',
+            cursor: 'pointer',
             fontSize: '16px',
             fontWeight: 'bold',
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
@@ -203,15 +211,15 @@ function App() {
 
       {error && <p style={{ color: 'red', fontSize: '1.1em', marginTop: '20px' }}>Ошибка: {error}</p>}
 
-      {estimate && ( 
-        <div style={{ 
-          border: '1px solid #dcdcdc', 
-          padding: '25px', 
-          borderRadius: '12px', 
-          maxWidth: '600px', 
-          margin: '30px auto', 
-          backgroundColor: '#ffffff', 
-          boxShadow: '0 6px 12px rgba(0,0,0,0.1)' 
+      {estimate && (
+        <div style={{
+          border: '1px solid #dcdcdc',
+          padding: '25px',
+          borderRadius: '12px',
+          maxWidth: '600px',
+          margin: '30px auto',
+          backgroundColor: '#ffffff',
+          boxShadow: '0 6px 12px rgba(0,0,0,0.1)'
         }}>
           <h2 style={{ color: '#2c3e50', marginBottom: '20px' }}>Результат оценки:</h2>
           <div style={{ textAlign: 'left', lineHeight: '1.8' }}>
