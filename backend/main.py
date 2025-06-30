@@ -1,9 +1,14 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from fastapi.requests import Request
+from fastapi.exception_handlers import RequestValidationError
+from fastapi.exceptions import HTTPException as FastAPIHTTPException
 from datetime import datetime
 import random
 from sqlmodel import Field, SQLModel, create_engine, Session # Убедитесь, что все импорты есть
 import os
+import json
 import httpx # Для выполнения HTTP-запросов из бэкенда
 
 # Конфигурация базы данных
@@ -29,11 +34,35 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(FastAPIHTTPException)
+async def http_exception_handler(request: Request, exc: FastAPIHTTPException):
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
+    )
+
+@app.exception_handler(Exception)
+async def generic_exception_handler(request: Request, exc: Exception):
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+        headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
+    )
 
 # Определяем модель для таблицы PropertyEstimate (если уже есть, убедитесь, что она такая)
 class PropertyEstimate(SQLModel, table=True):
@@ -55,6 +84,12 @@ class PropertyEstimate(SQLModel, table=True):
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
+
+# ВРЕМЕННЫЙ маршрут для ручного создания таблиц (удалите после инициализации!)
+@app.post("/init-db")
+def init_db():
+    create_db_and_tables()
+    return {"status": "ok", "message": "Database tables created."}
 
 # Маршрут для получения оценки недвижимости (может быть улучшен для реальных данных)
 @app.get("/estimate")
@@ -130,15 +165,31 @@ async def google_autocomplete_proxy(input: str):
     if not google_api_key:
         raise HTTPException(status_code=500, detail="Google API Key is not configured on the backend.")
 
-    # Создаем асинхронный HTTP-клиент
+    # Ограничиваем подсказки только США
+    components = "country:us"
     async with httpx.AsyncClient() as client:
-        google_places_url = f"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={input}&types=address&key={google_api_key}"
+        google_places_url = f"https://maps.googleapis.com/maps/api/place/autocomplete/json?input={input}&types=address&components={components}&key={google_api_key}"
         try:
             response = await client.get(google_places_url)
             response.raise_for_status() # Вызывает исключение для статусов 4xx/5xx
-            return response.json()
+            # Возвращаем полный ответ Google API для диагностики
+            return JSONResponse(
+                status_code=response.status_code,
+                content=response.json(),
+                headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
+            )
         except httpx.RequestError as exc:
             raise HTTPException(status_code=500, detail=f"An error occurred while requesting Google Places API: {exc}")
         except httpx.HTTPStatusError as exc:
-            raise HTTPException(status_code=exc.response.status_code, detail=f"Google Places API returned an error: {exc.response.text}")
+            # Возвращаем подробный ответ Google API при ошибке
+            return JSONResponse(
+                status_code=exc.response.status_code,
+                content={
+                    "error": "Google Places API returned an error",
+                    "status_code": exc.response.status_code,
+                    "text": exc.response.text,
+                    "json": exc.response.json() if exc.response.headers.get('content-type', '').startswith('application/json') else None
+                },
+                headers={"Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "*", "Access-Control-Allow-Methods": "*"}
+            )
 

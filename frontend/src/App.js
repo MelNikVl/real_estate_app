@@ -10,6 +10,7 @@ function App() {
   const [error, setError] = useState(null);
   const [suggestions, setSuggestions] = useState([]); // Состояние для подсказок
   const [showSuggestions, setShowSuggestions] = useState(false); // Состояние для отображения списка подсказок
+  const [activeSuggestion, setActiveSuggestion] = useState(-1); // Для навигации по подсказкам
 
   // Google API Key теперь не нужен на фронтенде напрямую
   // const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY; // Эту строку можно удалить или закомментировать
@@ -90,6 +91,7 @@ function App() {
   const handleAddressInputChange = (e) => {
     const input = e.target.value;
     setAddress(input);
+    setActiveSuggestion(-1); // Сбросить активную подсказку при вводе
 
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
@@ -105,6 +107,22 @@ function App() {
     setAddress(selectedSuggestion);
     setSuggestions([]);
     setShowSuggestions(false);
+    setActiveSuggestion(-1);
+  };
+
+  // Обработчик нажатий клавиш для навигации по подсказкам
+  const handleKeyDown = (e) => {
+    if (!showSuggestions || suggestions.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      setActiveSuggestion((prev) => Math.min(prev + 1, suggestions.length - 1));
+    } else if (e.key === 'ArrowUp') {
+      setActiveSuggestion((prev) => Math.max(prev - 1, 0));
+    } else if (e.key === 'Enter') {
+      if (activeSuggestion >= 0 && activeSuggestion < suggestions.length) {
+        handleSelectSuggestion(suggestions[activeSuggestion]);
+        e.preventDefault();
+      }
+    }
   };
 
   // Функция для парсинга истории продаж (без изменений)
@@ -129,6 +147,7 @@ function App() {
             onChange={handleAddressInputChange}
             onFocus={() => address.trim() && fetchSuggestions(address)}
             onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+            onKeyDown={handleKeyDown}
             style={{
               padding: '12px 15px',
               width: '100%',
@@ -164,10 +183,12 @@ function App() {
                     padding: '10px 15px',
                     borderBottom: '1px solid #eee',
                     cursor: 'pointer',
-                    textAlign: 'left'
+                    textAlign: 'left',
+                    backgroundColor: index === activeSuggestion ? '#e6f7ff' : 'white',
+                    fontWeight: index === activeSuggestion ? 'bold' : 'normal'
                   }}
-                  onMouseEnter={(e) => e.target.style.backgroundColor = '#f0f0f0'}
-                  onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                  onMouseEnter={() => setActiveSuggestion(index)}
+                  onMouseLeave={() => setActiveSuggestion(-1)}
                 >
                   {suggestion}
                 </li>
@@ -238,6 +259,39 @@ function App() {
           </div>
         </div>
       )}
+
+      {/* Новый блок преимуществ */}
+      <div style={{
+        background: '#eaf0fa',
+        borderRadius: '18px',
+        maxWidth: 600,
+        margin: '40px auto 0',
+        padding: '40px 20px',
+        boxShadow: '0 4px 16px rgba(44,62,80,0.07)',
+        textAlign: 'center'
+      }}>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ background: '#e3edfc', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M7 25l7.5-7.5 5 5L27 12" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="16" cy="16" r="15" stroke="#e3edfc" strokeWidth="2"/></svg>
+          </div>
+          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Точные оценки</h2>
+          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Алгоритмы машинного обучения анализируют миллионы транзакций</div>
+        </div>
+        <div style={{ marginBottom: 40 }}>
+          <div style={{ background: '#e6fce6', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><circle cx="15" cy="15" r="8" stroke="#22c55e" strokeWidth="2.5"/><path d="M28 28l-7-7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"/></svg>
+          </div>
+          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Мгновенные результаты</h2>
+          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Получите оценку за секунды, без ожидания</div>
+        </div>
+        <div>
+          <div style={{ background: '#f6eaff', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M8 14l8-8 8 8" stroke="#a259f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="8" y="14" width="16" height="10" rx="2" stroke="#a259f7" strokeWidth="2.5"/></svg>
+          </div>
+          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Полная информация</h2>
+          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Детали объекта, история цен и анализ района</div>
+        </div>
+      </div>
     </div>
   );
 }
