@@ -1,5 +1,5 @@
 # Используем официальный образ Python как базовый
-FROM python:3.9-slim-buster
+FROM python:3.10-slim-buster
 
 # Устанавливаем рабочую директорию внутри контейнера
 WORKDIR /app

@@ -1,5 +1,6 @@
 # frontend/Dockerfile
 # Этап сборки (build stage)
+FROM python:3.10-slim-buster
 FROM node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./

@@ -11,15 +11,14 @@ function App() {
   const [suggestions, setSuggestions] = useState([]); // Состояние для подсказок
   const [showSuggestions, setShowSuggestions] = useState(false); // Состояние для отображения списка подсказок
 
-  // Используйте process.env.REACT_APP_GOOGLE_API_KEY для вашего ключа Google API
-  // Убедитесь, что вы создали файл .env.development в папке frontend
-  // с REACT_APP_GOOGLE_API_KEY=ВАШ_КЛЮЧ
-  const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY;
+  // Google API Key теперь не нужен на фронтенде напрямую
+  // const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY; // Эту строку можно удалить или закомментировать
 
   // Реф для дебаунсинга запросов к Google API
   const debounceTimeoutRef = useRef(null);
 
-  // URL вашего FastAPI бэкенда
+  // URL вашего FastAPI бэкенда (без изменений)
+  // В .env.production у вас должно быть REACT_APP_API_BASE_URL=http://localhost:8000
   const BACKEND_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000';
 
   // Функция для запроса оценки недвижимости с бэкенда (без изменений)
@@ -52,13 +51,9 @@ function App() {
     }
   };
 
-  // Функция для получения автоподсказок от Google Places API
+  // НОВАЯ ФУНКЦИЯ: для получения автоподсказок от вашего бэкенда (который проксирует Google API)
   const fetchSuggestions = async (input) => {
-    if (!GOOGLE_API_KEY) {
-      console.error("Google API Key is not set. Please set REACT_APP_GOOGLE_API_KEY in your .env file.");
-      setSuggestions([]);
-      return;
-    }
+    // API Key теперь не проверяем здесь, так как он на бэкенде
     if (!input.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -66,58 +61,50 @@ function App() {
     }
 
     try {
-      // Endpoint для Places Autocomplete API
-      const googlePlacesUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(input)}&types=address&components=country:us&key=${GOOGLE_API_KEY}`;
+      // Запрос теперь идет на ваш бэкенд
+      const proxyUrl = `${BACKEND_BASE_URL}/google-autocomplete?input=${encodeURIComponent(input)}`;
 
-      const response = await fetch(googlePlacesUrl);
-      const data = await response.json();
+      const response = await fetch(proxyUrl);
+      const data = await response.json(); // Ожидаем JSON ответ от вашего бэкенда
 
       if (data.status === 'OK' && data.predictions && data.predictions.length > 0) {
-        // Убедимся, что есть предсказания
         setSuggestions(data.predictions.map(prediction => prediction.description));
         setShowSuggestions(true);
       } else if (data.status === 'ZERO_RESULTS') {
-        // Если результатов нет, но запрос успешен
-        console.log("Google Places API: No results for this input.");
+        console.log("Google Places API (via backend): No results for this input.");
         setSuggestions([]);
         setShowSuggestions(false);
-      }
-      else {
-        // Обработка других статусов ошибок от Google API
-        console.error("Google Places API error:", data.status, data.error_message || "Unknown error");
+      } else {
+        console.error("Google Places API error (via backend):", data.status, data.error_message || "Unknown error");
         setSuggestions([]);
         setShowSuggestions(false);
       }
     } catch (err) {
-      console.error("Error fetching Google Places suggestions:", err);
+      console.error("Error fetching Google Places suggestions (via backend):", err);
       setSuggestions([]);
       setShowSuggestions(false);
     }
   };
 
-  // Обработчик изменения поля ввода с дебаунсингом
+  // Обработчик изменения поля ввода с дебаунсингом (без изменений)
   const handleAddressInputChange = (e) => {
     const input = e.target.value;
     setAddress(input);
 
-    // Очищаем предыдущий таймаут
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
     }
 
-    // Устанавливаем новый таймаут для вызова API
     debounceTimeoutRef.current = setTimeout(() => {
       fetchSuggestions(input);
-    }, 300); // Задержка в 300 мс
+    }, 300);
   };
 
-  // Обработчик выбора подсказки
+  // Обработчик выбора подсказки (без изменений)
   const handleSelectSuggestion = (selectedSuggestion) => {
-    setAddress(selectedSuggestion); // Устанавливаем выбранный адрес в поле ввода
-    setSuggestions([]); // Очищаем список подсказок
-    setShowSuggestions(false); // Скрываем список
-    // Можно сразу же запросить оценку для выбранного адреса
-    // fetchEstimate(selectedSuggestion);
+    setAddress(selectedSuggestion);
+    setSuggestions([]);
+    setShowSuggestions(false);
   };
 
   // Функция для парсинга истории продаж (без изменений)
@@ -134,29 +121,29 @@ function App() {
     <div className="App" style={{ textAlign: 'center', padding: '20px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f0f2f5', minHeight: '100vh', color: '#333' }}>
       <h1 style={{ color: '#2c3e50', marginBottom: '30px' }}>Real Estate Valuation MVP</h1>
       <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}> {/* Обертка для позиционирования подсказок */}
+        <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}>
           <input
             type="text"
             placeholder="Введите адрес (например, 5500 Grand Lake Dr, San Antonio, TX 78244)"
             value={address}
-            onChange={handleAddressInputChange} // Используем новый обработчик
-            onFocus={() => address.trim() && fetchSuggestions(address)} // Показываем подсказки при фокусе, если что-то уже введено
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 100)} // Скрываем подсказки с небольшой задержкой
+            onChange={handleAddressInputChange}
+            onFocus={() => address.trim() && fetchSuggestions(address)}
+            onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
             style={{
               padding: '12px 15px',
               width: '100%',
-              marginRight: '15px', // Убрал, т.к. теперь в flex-col
+              marginRight: '15px',
               borderRadius: '8px',
               border: '1px solid #a0a0a0',
               boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
               fontSize: '16px',
-              boxSizing: 'border-box' // Важно для правильной ширины
+              boxSizing: 'border-box'
             }}
           />
           {showSuggestions && suggestions.length > 0 && (
             <ul style={{
               position: 'absolute',
-              top: '100%', // Располагаем под полем ввода
+              top: '100%',
               left: 0,
               right: 0,
               backgroundColor: 'white',
@@ -167,7 +154,7 @@ function App() {
               margin: '5px 0 0 0',
               maxHeight: '200px',
               overflowY: 'auto',
-              zIndex: 100 // Чтобы список был поверх других элементов
+              zIndex: 100
             }}>
               {suggestions.map((suggestion, index) => (
                 <li
@@ -189,7 +176,7 @@ function App() {
           )}
         </div>
         <button
-          onClick={() => fetchEstimate()} // Теперь вызываем оценку только по кнопке
+          onClick={() => fetchEstimate()}
           disabled={loading || !address.trim()}
           style={{
             padding: '12px 25px',
@@ -202,7 +189,7 @@ function App() {
             fontWeight: 'bold',
             boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
             transition: 'background-color 0.3s ease, transform 0.2s ease',
-            marginTop: '15px' // Отступ от поля ввода
+            marginTop: '15px'
           }}
         >
           {loading ? 'Оцениваем...' : 'Получить оценку'}
