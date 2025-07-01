@@ -8,9 +8,9 @@ function App() {
   const [estimate, setEstimate] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [suggestions, setSuggestions] = useState([]); // Состояние для подсказок
-  const [showSuggestions, setShowSuggestions] = useState(false); // Состояние для отображения списка подсказок
-  const [activeSuggestion, setActiveSuggestion] = useState(-1); // Для навигации по подсказкам
+  const [suggestions, setSuggestions] = useState([]); // Suggestions state
+  const [showSuggestions, setShowSuggestions] = useState(false); // Show suggestions
+  const [activeSuggestion, setActiveSuggestion] = useState(-1); // For keyboard navigation
 
   // Google API Key теперь не нужен на фронтенде напрямую
   // const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY; // Эту строку можно удалить или закомментировать
@@ -25,7 +25,7 @@ function App() {
   // Функция для запроса оценки недвижимости с бэкенда (без изменений)
   const fetchEstimate = async (selectedAddress = address) => {
     if (!selectedAddress.trim()) {
-      setError('Пожалуйста, введите адрес.');
+      setError('Please enter an address.');
       return;
     }
 
@@ -142,7 +142,7 @@ function App() {
         <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}>
           <input
             type="text"
-            placeholder="Введите адрес (например, 5500 Grand Lake Dr, San Antonio, TX 78244)"
+            placeholder="Enter address (e.g. 5500 Grand Lake Dr, San Antonio, TX 78244)"
             value={address}
             onChange={handleAddressInputChange}
             onFocus={() => address.trim() && fetchSuggestions(address)}
@@ -213,11 +213,11 @@ function App() {
             marginTop: '15px'
           }}
         >
-          {loading ? 'Оцениваем...' : 'Получить оценку'}
+          {loading ? 'Valuating...' : 'Get Estimate'}
         </button>
       </div>
 
-      {error && <p style={{ color: 'red', fontSize: '1.1em', marginTop: '20px' }}>Ошибка: {error}</p>}
+      {error && <p style={{ color: 'red', fontSize: '1.1em', marginTop: '20px' }}>Error: {error}</p>}
 
       {estimate && (
         <div style={{
@@ -229,28 +229,28 @@ function App() {
           backgroundColor: '#ffffff',
           boxShadow: '0 6px 12px rgba(0,0,0,0.1)'
         }}>
-          <h2 style={{ color: '#2c3e50', marginBottom: '20px' }}>Результат оценки:</h2>
+          <h2 style={{ color: '#2c3e50', marginBottom: '20px' }}>Valuation Result:</h2>
           <div style={{ textAlign: 'left', lineHeight: '1.8' }}>
-            <p><strong>Адрес:</strong> {estimate.formattedAddress || estimate.address}</p>
-            <p><strong>Оценка:</strong> {estimate.valuation ? `${estimate.valuation} ${estimate.currency}` : 'Нет данных'}</p>
-            <p><strong>Тип недвижимости:</strong> {estimate.property_type || 'Нет данных'}</p>
-            <p><strong>Спальни:</strong> {estimate.bedrooms || 'Нет данных'}</p>
-            <p><strong>Ванные:</strong> {estimate.bathrooms || 'Нет данных'}</p>
-            <p><strong>Площадь (кв.футов):</strong> {estimate.square_footage || 'Нет данных'}</p>
-            <p><strong>Площадь участка (кв.футов):</strong> {estimate.lot_size || 'Нет данных'}</p>
-            <p><strong>Год постройки:</strong> {estimate.year_built || 'Нет данных'}</p>
-            <p><strong>Дата последней продажи:</strong> {estimate.last_sale_date ? new Date(estimate.last_sale_date).toLocaleDateString() : 'Нет данных'}</p>
-            <p><strong>Дата оценки:</strong> {estimate.created_at ? new Date(estimate.created_at).toLocaleString() : 'N/A'}</p>
+            <p><strong>Address:</strong> {estimate.formattedAddress || estimate.address}</p>
+            <p><strong>Estimate:</strong> {estimate.valuation ? `${estimate.valuation} ${estimate.currency}` : 'No data'}</p>
+            <p><strong>Property type:</strong> {estimate.property_type || 'No data'}</p>
+            <p><strong>Bedrooms:</strong> {estimate.bedrooms || 'No data'}</p>
+            <p><strong>Bathrooms:</strong> {estimate.bathrooms || 'No data'}</p>
+            <p><strong>Area (sq.ft):</strong> {estimate.square_footage || 'No data'}</p>
+            <p><strong>Lot size (sq.ft):</strong> {estimate.lot_size || 'No data'}</p>
+            <p><strong>Year built:</strong> {estimate.year_built || 'No data'}</p>
+            <p><strong>Last sale date:</strong> {estimate.last_sale_date ? new Date(estimate.last_sale_date).toLocaleDateString() : 'No data'}</p>
+            <p><strong>Valuation date:</strong> {estimate.created_at ? new Date(estimate.created_at).toLocaleString() : 'N/A'}</p>
 
             {estimate.sale_history_json && Object.keys(parseSaleHistory(estimate.sale_history_json)).length > 0 && (
               <div style={{ marginTop: '20px', borderTop: '1px dashed #e0e0e0', paddingTop: '20px' }}>
-                <h3 style={{ color: '#2c3e50', marginBottom: '15px' }}>История продаж объекта:</h3>
+                <h3 style={{ color: '#2c3e50', marginBottom: '15px' }}>Sale History:</h3>
                 <ul style={{ listStyleType: 'none', padding: 0 }}>
                   {Object.entries(parseSaleHistory(estimate.sale_history_json)).map(([dateKey, sale]) => (
                     <li key={dateKey} style={{ marginBottom: '10px', backgroundColor: '#f5f5f5', padding: '10px', borderRadius: '5px' }}>
-                      <strong>Событие:</strong> {sale.event || 'Sale'} <br />
-                      <strong>Дата:</strong> {sale.date ? new Date(sale.date).toLocaleDateString() : 'N/A'} <br />
-                      <strong>Цена:</strong> {sale.price ? `${sale.price} ${estimate.currency}` : 'N/A'}
+                      <strong>Event:</strong> {sale.event || 'Sale'} <br />
+                      <strong>Date:</strong> {sale.date ? new Date(sale.date).toLocaleDateString() : 'N/A'} <br />
+                      <strong>Price:</strong> {sale.price ? `${sale.price} ${estimate.currency}` : 'N/A'}
                     </li>
                   ))}
                 </ul>
@@ -260,39 +260,39 @@ function App() {
         </div>
       )}
 
-      {/* Новый блок преимуществ */}
-      <div style={{
-        background: '#eaf0fa',
-        borderRadius: '18px',
-        maxWidth: 600,
-        margin: '40px auto 0',
-        padding: '40px 20px',
-        boxShadow: '0 4px 16px rgba(44,62,80,0.07)',
-        textAlign: 'center'
-      }}>
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ background: '#e3edfc', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M7 25l7.5-7.5 5 5L27 12" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="16" cy="16" r="15" stroke="#e3edfc" strokeWidth="2"/></svg>
-          </div>
-          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Точные оценки</h2>
-          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Алгоритмы машинного обучения анализируют миллионы транзакций</div>
+    {/* Features block in English */}
+    <div style={{
+      background: '#eaf0fa',
+      borderRadius: '18px',
+      maxWidth: 600,
+      margin: '40px auto 0',
+      padding: '40px 20px',
+      boxShadow: '0 4px 16px rgba(44,62,80,0.07)',
+      textAlign: 'center'
+    }}>
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ background: '#e3edfc', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M7 25l7.5-7.5 5 5L27 12" stroke="#3b82f6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><circle cx="16" cy="16" r="15" stroke="#e3edfc" strokeWidth="2"/></svg>
         </div>
-        <div style={{ marginBottom: 40 }}>
-          <div style={{ background: '#e6fce6', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><circle cx="15" cy="15" r="8" stroke="#22c55e" strokeWidth="2.5"/><path d="M28 28l-7-7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"/></svg>
-          </div>
-          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Мгновенные результаты</h2>
-          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Получите оценку за секунды, без ожидания</div>
+        <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Accurate Valuations</h2>
+        <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Machine learning algorithms analyze millions of transactions</div>
+      </div>
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ background: '#e6fce6', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><circle cx="15" cy="15" r="8" stroke="#22c55e" strokeWidth="2.5"/><path d="M28 28l-7-7" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round"/></svg>
         </div>
-        <div>
-          <div style={{ background: '#f6eaff', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M8 14l8-8 8 8" stroke="#a259f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="8" y="14" width="16" height="10" rx="2" stroke="#a259f7" strokeWidth="2.5"/></svg>
-          </div>
-          <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Полная информация</h2>
-          <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Детали объекта, история цен и анализ района</div>
+        <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Instant Results</h2>
+        <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Get your estimate in seconds, no waiting</div>
+      </div>
+      <div>
+        <div style={{ background: '#f6eaff', borderRadius: '50%', width: 60, height: 60, margin: '0 auto 18px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="32" height="32" fill="none" viewBox="0 0 32 32"><path d="M8 14l8-8 8 8" stroke="#a259f7" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/><rect x="8" y="14" width="16" height="10" rx="2" stroke="#a259f7" strokeWidth="2.5"/></svg>
         </div>
+        <h2 style={{ fontWeight: 700, fontSize: 22, margin: 0 }}>Full Information</h2>
+        <div style={{ color: '#444', fontSize: 16, marginTop: 8 }}>Object details, price history, and neighborhood analytics</div>
       </div>
     </div>
+  </div>
   );
 }
 
