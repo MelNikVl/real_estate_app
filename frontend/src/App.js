@@ -136,8 +136,85 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ textAlign: 'center', padding: '20px', fontFamily: 'Arial, sans-serif', backgroundColor: '#f0f2f5', minHeight: '100vh', color: '#333' }}>
-      <h1 style={{ color: '#2c3e50', marginBottom: '30px' }}>Real Estate Valuation MVP</h1>
+    <div className="App">
+      {/* Mobile header */}
+      <div className="header-mobile">
+        <span className="bank">BANK</span>
+        <span className="phone">(555) 123-4567</span>
+      </div>
+      <div className="main-mobile">
+        <h2 style={{ textAlign: 'left', fontWeight: 800, fontSize: '2rem', margin: '0 0 18px 0' }}>Enter your property address</h2>
+        <input
+          className="input-mobile"
+          type="text"
+          placeholder="1234 Elm St, Springfield, IL"
+          value={address}
+          onChange={handleAddressInputChange}
+          onFocus={() => address.trim() && fetchSuggestions(address)}
+          onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
+          onKeyDown={handleKeyDown}
+        />
+        {showSuggestions && suggestions.length > 0 && (
+          <ul style={{
+            position: 'relative',
+            background: '#fff',
+            border: '1px solid #eee',
+            borderRadius: '12px',
+            listStyle: 'none',
+            padding: 0,
+            margin: 0,
+            maxHeight: '180px',
+            overflowY: 'auto',
+            zIndex: 100
+          }}>
+            {suggestions.map((suggestion, index) => (
+              <li
+                key={index}
+                onClick={() => handleSelectSuggestion(suggestion)}
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid #f0f0f0',
+                  cursor: 'pointer',
+                  background: index === activeSuggestion ? '#f8f9fb' : '#fff',
+                  fontWeight: index === activeSuggestion ? 'bold' : 'normal'
+                }}
+                onMouseEnter={() => setActiveSuggestion(index)}
+                onMouseLeave={() => setActiveSuggestion(-1)}
+              >
+                {suggestion}
+              </li>
+            ))}
+          </ul>
+        )}
+        <button
+          className="button-mobile"
+          onClick={() => fetchEstimate()}
+          disabled={loading || !address.trim()}
+        >
+          {loading ? 'Valuating...' : 'Get Estimate'}
+        </button>
+        {error && <div style={{ color: 'red', fontSize: '1em', margin: '10px 0' }}>Error: {error}</div>}
+        {estimate && (
+          <>
+            <div className="estimate-label">Estimated Home Value</div>
+            <div className="estimate-value">{estimate.estimated_value ? `$${estimate.estimated_value.toLocaleString()}` : 'No data'}</div>
+            <div className="info-box">
+              <svg width="28" height="28" fill="none" viewBox="0 0 28 28"><circle cx="14" cy="14" r="14" fill="#e3edfc"/><text x="14" y="19" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#3b82f6">🙂</text></svg>
+              Spring is a great time to sell your home.
+            </div>
+            <div className="report-block">
+              <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 10 }}>Get your free report</div>
+              <input className="input-email" type="email" placeholder="Email address" />
+              <button className="button-report">Get Report</button>
+            </div>
+            <div className="expert-link">
+              <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#eee"/><path d="M10 10a3 3 0 100-6 3 3 0 000 6zM10 12c-2.33 0-7 1.17-7 3.5V18h14v-2.5C17 13.17 12.33 12 10 12z" fill="#888"/></svg>
+              Expert consultation
+            </div>
+          </>
+        )}
+      </div>
+
       <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}>
           <input
