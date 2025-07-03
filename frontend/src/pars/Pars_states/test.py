@@ -1,23 +1,17 @@
 import requests
+import csv
+import io
 
-def fetch_housing_data(state_fips):
-    base = "https://api.census.gov/data/2022/pep/charage"
-    params = {
-        "get": "NAME,POP,DATE_CODE",
-        "for": f"state:{state_fips}"
-    }
-    resp = requests.get(base, params=params)
-    resp.raise_for_status()
-    headers, values = resp.json()
-    return dict(zip(headers, values))
+url = "https://www2.census.gov/programs-surveys/popest/datasets/2020-2024/state/totals/nst-est2024-hu.csv"
+resp = requests.get(url)
+resp.raise_for_status()
+csv_text = resp.text
 
-# Примеры: TX = 48, CA = 06
-states = {"TX": "48", "CA": "06"}
+reader = csv.DictReader(io.StringIO(csv_text))
+for row in reader:
+    if row["NAME"] in ("Texas", "California"):
+        print(f"{row['NAME']}:")
+        print(f"  Housing Units 2024: {row['HU2024']}")
+        print(f"  Housing Units 2023: {row['HU2023']}")
 
-for state_code, fips in states.items():
-    data = fetch_housing_data(fips)
-    print(f"{state_code}:")
-    print(f"  Name: {data['NAME']}")
-    print(f"  Population Estimate: {data['POP']}")
-    print(f"  Year code: {data['DATE_CODE']}")
-    print()
+
