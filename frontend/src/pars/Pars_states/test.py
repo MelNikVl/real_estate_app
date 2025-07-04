@@ -13,5 +13,6 @@ for row in reader:
         print(f"{row['NAME']}:")
         print(f"  Housing Units 2024: {row['HU2024']}")
         print(f"  Housing Units 2023: {row['HU2023']}")
+        
 
 
