@@ -11,6 +11,8 @@ function App() {
   const [suggestions, setSuggestions] = useState([]); // Suggestions state
   const [showSuggestions, setShowSuggestions] = useState(false); // Show suggestions
   const [activeSuggestion, setActiveSuggestion] = useState(-1); // For keyboard navigation
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 600);
+  const containerRef = useRef(null);
 
   // Google API Key теперь не нужен на фронтенде напрямую
   // const GOOGLE_API_KEY = process.env.REACT_APP_GOOGLE_API_KEY; // Эту строку можно удалить или закомментировать
@@ -135,120 +137,55 @@ function App() {
     }
   };
 
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 600);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
+  }, []);
+
   return (
     <div className="App">
       {/* Mobile header */}
       <div className="header-mobile">
-        <span className="bank">BANK</span>
+        <span className="bank">MELNIK_RE_APP</span>
         <span className="phone">(555) 123-4567</span>
       </div>
-      <div className="main-mobile">
-        <h2 style={{ textAlign: 'left', fontWeight: 800, fontSize: '2rem', margin: '0 0 18px 0' }}>Enter your property address</h2>
-        <input
-          className="input-mobile"
-          type="text"
-          placeholder="1234 Elm St, Springfield, IL"
-          value={address}
-          onChange={handleAddressInputChange}
-          onFocus={() => address.trim() && fetchSuggestions(address)}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
-          onKeyDown={handleKeyDown}
-        />
-        {showSuggestions && suggestions.length > 0 && (
-          <ul style={{
-            position: 'relative',
-            background: '#fff',
-            border: '1px solid #eee',
-            borderRadius: '12px',
-            listStyle: 'none',
-            padding: 0,
-            margin: 0,
-            maxHeight: '180px',
-            overflowY: 'auto',
-            zIndex: 100
-          }}>
-            {suggestions.map((suggestion, index) => (
-              <li
-                key={index}
-                onClick={() => handleSelectSuggestion(suggestion)}
-                style={{
-                  padding: '12px 16px',
-                  borderBottom: '1px solid #f0f0f0',
-                  cursor: 'pointer',
-                  background: index === activeSuggestion ? '#f8f9fb' : '#fff',
-                  fontWeight: index === activeSuggestion ? 'bold' : 'normal'
-                }}
-                onMouseEnter={() => setActiveSuggestion(index)}
-                onMouseLeave={() => setActiveSuggestion(-1)}
-              >
-                {suggestion}
-              </li>
-            ))}
-          </ul>
-        )}
-        <button
-          className="button-mobile"
-          onClick={() => fetchEstimate()}
-          disabled={loading || !address.trim()}
-        >
-          {loading ? 'Valuating...' : 'Get Estimate'}
-        </button>
-        {error && <div style={{ color: 'red', fontSize: '1em', margin: '10px 0' }}>Error: {error}</div>}
-        {estimate && (
-          <>
-            <div className="estimate-label">Estimated Home Value</div>
-            <div className="estimate-value">{estimate.estimated_value ? `$${estimate.estimated_value.toLocaleString()}` : 'No data'}</div>
-            <div className="info-box">
-              <svg width="28" height="28" fill="none" viewBox="0 0 28 28"><circle cx="14" cy="14" r="14" fill="#e3edfc"/><text x="14" y="19" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#3b82f6">🙂</text></svg>
-              Spring is a great time to sell your home.
-            </div>
-            <div className="report-block">
-              <div style={{ fontWeight: 700, fontSize: '1.1rem', marginBottom: 10 }}>Get your free report</div>
-              <input className="input-email" type="email" placeholder="Email address" />
-              <button className="button-report">Get Report</button>
-            </div>
-            <div className="expert-link">
-              <svg width="20" height="20" fill="none" viewBox="0 0 20 20"><circle cx="10" cy="10" r="10" fill="#eee"/><path d="M10 10a3 3 0 100-6 3 3 0 000 6zM10 12c-2.33 0-7 1.17-7 3.5V18h14v-2.5C17 13.17 12.33 12 10 12z" fill="#888"/></svg>
-              Expert consultation
-            </div>
-          </>
-        )}
-      </div>
-
-      <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}>
+      {isMobile ? (
+        <div className="main-mobile" ref={containerRef}>
+          <h2 style={{ textAlign: 'left', fontWeight: 800, fontSize: '2rem', margin: '0 0 18px 0' }}>Enter your property address</h2>
           <input
+            className="input-mobile"
             type="text"
-            placeholder="Enter address (e.g. 5500 Grand Lake Dr, San Antonio, TX 78244)"
+            placeholder="1234 Elm St, Springfield, IL"
             value={address}
             onChange={handleAddressInputChange}
             onFocus={() => address.trim() && fetchSuggestions(address)}
-            onBlur={() => setTimeout(() => setShowSuggestions(false), 100)}
             onKeyDown={handleKeyDown}
-            style={{
-              padding: '12px 15px',
-              width: '100%',
-              marginRight: '15px',
-              borderRadius: '8px',
-              border: '1px solid #a0a0a0',
-              boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
-              fontSize: '16px',
-              boxSizing: 'border-box'
-            }}
           />
           {showSuggestions && suggestions.length > 0 && (
             <ul style={{
-              position: 'absolute',
-              top: '100%',
-              left: 0,
-              right: 0,
-              backgroundColor: 'white',
-              border: '1px solid #a0a0a0',
-              borderRadius: '8px',
+              position: 'relative',
+              background: '#fff',
+              border: '1px solid #eee',
+              borderRadius: '12px',
               listStyle: 'none',
-              padding: '0',
-              margin: '5px 0 0 0',
-              maxHeight: '200px',
+              padding: 0,
+              margin: 0,
+              maxHeight: '180px',
               overflowY: 'auto',
               zIndex: 100
             }}>
@@ -257,11 +194,10 @@ function App() {
                   key={index}
                   onClick={() => handleSelectSuggestion(suggestion)}
                   style={{
-                    padding: '10px 15px',
-                    borderBottom: '1px solid #eee',
+                    padding: '12px 16px',
+                    borderBottom: '1px solid #f0f0f0',
                     cursor: 'pointer',
-                    textAlign: 'left',
-                    backgroundColor: index === activeSuggestion ? '#e6f7ff' : 'white',
+                    background: index === activeSuggestion ? '#f8f9fb' : '#fff',
                     fontWeight: index === activeSuggestion ? 'bold' : 'normal'
                   }}
                   onMouseEnter={() => setActiveSuggestion(index)}
@@ -272,30 +208,95 @@ function App() {
               ))}
             </ul>
           )}
+          <button
+            className="button-mobile"
+            onClick={() => fetchEstimate()}
+            disabled={loading || !address.trim()}
+          >
+            {loading ? 'Valuating...' : 'Get Estimate'}
+          </button>
         </div>
-        <button
-          onClick={() => fetchEstimate()}
-          disabled={loading || !address.trim()}
-          style={{
-            padding: '12px 25px',
-            backgroundColor: '#28a745',
-            color: 'white',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-            transition: 'background-color 0.3s ease, transform 0.2s ease',
-            marginTop: '15px'
-          }}
-        >
-          {loading ? 'Valuating...' : 'Get Estimate'}
-        </button>
-      </div>
+      ) : (
+        <div style={{ marginBottom: '30px', display: 'flex', flexDirection: 'column', alignItems: 'center' }} ref={containerRef}>
+          <div style={{ position: 'relative', width: '400px', maxWidth: 'calc(100% - 150px)' }}>
+            <input
+              type="text"
+              placeholder="Enter address (e.g. 5500 Grand Lake Dr, San Antonio, TX 78244)"
+              value={address}
+              onChange={handleAddressInputChange}
+              onFocus={() => address.trim() && fetchSuggestions(address)}
+              onKeyDown={handleKeyDown}
+              style={{
+                padding: '12px 15px',
+                width: '100%',
+                marginRight: '15px',
+                borderRadius: '8px',
+                border: '1px solid #a0a0a0',
+                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)',
+                fontSize: '16px',
+                boxSizing: 'border-box'
+              }}
+            />
+            {showSuggestions && suggestions.length > 0 && (
+              <ul style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: 'white',
+                border: '1px solid #a0a0a0',
+                borderRadius: '8px',
+                listStyle: 'none',
+                padding: '0',
+                margin: '5px 0 0 0',
+                maxHeight: '200px',
+                overflowY: 'auto',
+                zIndex: 100
+              }}>
+                {suggestions.map((suggestion, index) => (
+                  <li
+                    key={index}
+                    onClick={() => handleSelectSuggestion(suggestion)}
+                    style={{
+                      padding: '10px 15px',
+                      borderBottom: '1px solid #eee',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      backgroundColor: index === activeSuggestion ? '#e6f7ff' : 'white',
+                      fontWeight: index === activeSuggestion ? 'bold' : 'normal'
+                    }}
+                    onMouseEnter={() => setActiveSuggestion(index)}
+                    onMouseLeave={() => setActiveSuggestion(-1)}
+                  >
+                    {suggestion}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <button
+            onClick={() => fetchEstimate()}
+            disabled={loading || !address.trim()}
+            style={{
+              padding: '12px 25px',
+              backgroundColor: '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+              transition: 'background-color 0.3s ease, transform 0.2s ease',
+              marginTop: '15px'
+            }}
+          >
+            {loading ? 'Valuating...' : 'Get Estimate'}
+          </button>
+        </div>
+      )}
 
       {error && <p style={{ color: 'red', fontSize: '1.1em', marginTop: '20px' }}>Error: {error}</p>}
-
       {estimate && (
         <div style={{
           border: '1px solid #dcdcdc',
