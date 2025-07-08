@@ -1,5 +1,4 @@
 FROM python:3.10-slim-buster
-=======
 # frontend/Dockerfile
 # Этап сборки (build stage)
 # FROM python:3.10-slim-buster>>>>>>> 8db00ae (ssl_certificate:)
