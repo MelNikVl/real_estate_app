@@ -19,7 +19,7 @@ engine = create_engine(DATABASE_URL)
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
-app = FastAPI()
+app = FastAPI(root_path="/api")
 
 # Добавьте этот блок для CORS (если уже есть, убедитесь, что он такой)
 origins = [
