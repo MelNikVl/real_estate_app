@@ -1,4 +1,8 @@
 FROM python:3.10-slim-buster
+=======
+# frontend/Dockerfile
+# Этап сборки (build stage)
+# FROM python:3.10-slim-buster>>>>>>> 8db00ae (ssl_certificate:)
 FROM node:20-alpine AS build-stage
 WORKDIR /app
 COPY package*.json ./

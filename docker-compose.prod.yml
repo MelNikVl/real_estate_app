@@ -1,0 +1,64 @@
+version: '3'
+
+services:
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/nginx/vhost.d
+      - /usr/share/nginx/html
+      - ./certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  letsencrypt:
+    image: jrcs/letsencrypt-nginx-proxy-companion
+    container_name: nginx-proxy-le
+    environment:
+      NGINX_PROXY_CONTAINER: nginx-proxy
+      DEFAULT_EMAIL: shumerrr@yandex.ru
+    volumes:
+      - ./certs:/etc/nginx/certs:rw
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: real_estate_db
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d real_estate_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    environment:
+      DATABASE_URL: postgresql://user:password@db:5432/real_estate_db
+      GOOGLE_API_KEY: AIzaSyDwN8UV2bfiMz9afTicKRh6ynHgMGK3YwU
+      VIRTUAL_HOST: real-estate-app.pro
+      LETSENCRYPT_HOST: real-estate-app.pro
+      LETSENCRYPT_EMAIL: shumerrr@yandex.ru
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    environment:
+      VIRTUAL_HOST: real-estate-app.pro
+      LETSENCRYPT_HOST: real-estate-app.pro
+      LETSENCRYPT_EMAIL: shumerrr@yandex.ru
+    depends_on:
+      - backend
+
+volumes:
+  db_data:

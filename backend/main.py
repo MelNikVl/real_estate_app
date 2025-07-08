@@ -29,12 +29,14 @@ origins = [
     "http://52.23.160.127",   # Ваш актуальный публичный IP EC2 инстанса
     "http://backend",         # Имя Docker сервиса frontend, как он видит backend внутри Docker Compose сети
     "http://backend:80",      # Если frontend будет явно указывать порт, хотя обычно хватает просто имени сервиса
-    "http://backend:8000"     # На всякий случай, если внутренний запрос будет с портом
+    "http://backend:8000",    # На всякий случай, если внутренний запрос будет с портом
+    "http://real-estate-app.pro",   # Ваш домен (HTTP)
+    "https://real-estate-app.pro"   # Ваш домен (HTTPS)
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
