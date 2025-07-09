@@ -7,8 +7,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 COPY . ./
-RUN npm run build # или yarn build, если используешь yarn   
-
+RUN npm run build # или yarn build, если используешь yarn
 
 FROM nginx:stable-alpine
 COPY --from=build-stage /app/build /usr/share/nginx/html

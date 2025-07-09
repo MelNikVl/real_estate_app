@@ -19,7 +19,7 @@ engine = create_engine(DATABASE_URL)
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
 
-app = FastAPI(root_path="/api")
+app = FastAPI()
 
 # Добавьте этот блок для CORS (если уже есть, убедитесь, что он такой)
 origins = [
@@ -79,15 +79,15 @@ class PropertyEstimate(SQLModel, table=True):
     lot_size: int | None = None
     year_built: int | None = None
     last_sale_date: str | None = None
-    sale_history_json: str | None = None # Храним историю продаж как JSON-строку
-    created_at: str | None = None # Время создания оценки
+    sale_history_json: str | None = None
+    created_at: str | None = None
 
 # Событие запуска приложения: создание таблиц
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
 
-# ВРЕМЕННЫЙ маршрут для ручного создания таблиц (удалите после инициализации!)
+# ВРЕМЕННЫЙ маршрут для ручного создания таблиц (удалить после инициализации!)
 @app.post("/init-db")
 def init_db():
     create_db_and_tables()
