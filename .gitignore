@@ -3,6 +3,7 @@ __pycache__/
 node_modules/
 build/
 .env*
+!.env.example
 certs/
 *.pem
 .DS_Store
