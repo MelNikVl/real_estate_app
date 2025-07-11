@@ -5,6 +5,7 @@ build/
 .env*
 !.env.example
 certs/
+certbot/
 *.pem
 .DS_Store
 *.log

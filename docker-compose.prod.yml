@@ -10,19 +10,21 @@ services:
     volumes:
       - /etc/nginx/vhost.d
       - /usr/share/nginx/html:/usr/share/nginx/html
-      - ./certs:/etc/nginx/certs:ro
+      - ./certs:/etc/nginx/certs
+      - ./certbot/www:/var/www/certbot
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
-  letsencrypt:
-    image: jrcs/letsencrypt-nginx-proxy-companion
-    container_name: nginx-proxy-le
-    environment:
-      NGINX_PROXY_CONTAINER: nginx-proxy
-      DEFAULT_EMAIL: shumerrr@yandex.ru
+  certbot:
+    image: certbot/certbot
     volumes:
-      - ./certs:/etc/nginx/certs:rw
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-      - /usr/share/nginx/html:/usr/share/nginx/html
+      - ./certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: ""
+    command: >
+      certonly --webroot --webroot-path=/var/www/certbot
+      --email ${CERTBOT_EMAIL} --agree-tos --no-eff-email
+      -d ${VIRTUAL_HOST}
+      --deploy-hook "cp /etc/letsencrypt/live/${VIRTUAL_HOST}/fullchain.pem /etc/letsencrypt/${VIRTUAL_HOST}.crt && cp /etc/letsencrypt/live/${VIRTUAL_HOST}/privkey.pem /etc/letsencrypt/${VIRTUAL_HOST}.key"
 
   db:
     image: postgres:13
@@ -50,8 +52,6 @@ services:
       VIRTUAL_HOST: ${VIRTUAL_HOST}
       VIRTUAL_PORT: 8000
       VIRTUAL_PATH: /api/
-      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
-      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     depends_on:
       db:
         condition: service_healthy
@@ -65,8 +65,6 @@ services:
       VIRTUAL_PORT: 80
       VIRTUAL_PATH: /
       REACT_APP_API_BASE_URL: ${REACT_APP_API_BASE_URL}
-      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
-      LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
     depends_on:
       - backend
 
