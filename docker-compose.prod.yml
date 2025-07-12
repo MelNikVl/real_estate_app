@@ -10,17 +10,9 @@ services:
       - "443:443"
     volumes:
       - ./realestate.conf:/etc/nginx/nginx.conf
-
-  # letsencrypt:
-  #   image: jrcs/letsencrypt-nginx-proxy-companion
-  #   container_name: nginx-proxy-le
-  #   environment:
-  #     NGINX_PROXY_CONTAINER: nginx-proxy
-  #     DEFAULT_EMAIL: shumerrr@yandex.ru
-  #   volumes:
-  #     - ./certs:/etc/nginx/certs:rw
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-  #     - /usr/share/nginx/html:/usr/share/nginx/html
+      - /var/www/html:/usr/share/nginx/html
+      - /etc/letsencrypt/live/real-estate-app.pro/fullchain.pem:/etc/nginx/ssl/fullchain.pem
+      - /etc/letsencrypt/live/real-estate-app.pro/privkey.pem:/etc/nginx/ssl/privkey.pem
 
   db:
     image: postgres:13
