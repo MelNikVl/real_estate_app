@@ -1,3 +1,1 @@
-пока делаем мвп
-занимаюсь рекламой и провдивжением
-
+See [project root](../README.md) for setup instructions.
