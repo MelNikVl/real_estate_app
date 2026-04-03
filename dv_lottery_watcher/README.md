@@ -22,11 +22,4 @@ python app.py
 ```bash
 DV_RUN_ONCE=true python app.py
 ```
-
-- Для отправки теста в Telegram:
-
-```bash
-DV_SEND_TEST_MESSAGE=true python app.py
-```
-
 - Состояние хранится в `state.json` (хэш страницы, время последней проверки, ошибки, флаг уже отправленного уведомления).

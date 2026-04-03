@@ -10,13 +10,6 @@ import requests
 DV_URL = "https://dvprogram.state.gov/"
 CHECK_INTERVAL_SECONDS = 12 * 60 * 60  # 2 раза в сутки
 STATE_FILE = os.environ.get("DV_STATE_FILE", "state.json")
-REQUEST_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
-        "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept-Language": "en-US,en;q=0.9",
-}
 
 TELEGRAM_BOT_TOKEN = os.environ.get("DV_TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.environ.get("DV_TELEGRAM_CHAT_ID", "")
@@ -75,12 +68,6 @@ def send_telegram(message: str) -> None:
     url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
     response = requests.post(url, json={"chat_id": TELEGRAM_CHAT_ID, "text": message}, timeout=20)
     response.raise_for_status()
-
-
-def send_test_message() -> None:
-    now = utc_now_iso()
-    send_telegram(f"✅ Тест от DV watcher. Время UTC: {now}")
-    print(f"[OK] Тестовое сообщение отправлено ({now}).")
 
 
 def run_check() -> None:
