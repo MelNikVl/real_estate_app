@@ -75,7 +75,7 @@ def run_check() -> None:
     now = utc_now_iso()
 
     try:
-        response = requests.get(DV_URL, timeout=30)
+        response = requests.get(DV_URL, headers=REQUEST_HEADERS, timeout=30)
         response.raise_for_status()
 
         text = normalize_text(response.text)
@@ -113,6 +113,11 @@ def run_check() -> None:
 
 def main() -> None:
     run_once = os.environ.get("DV_RUN_ONCE", "false").lower() == "true"
+    test_message = os.environ.get("DV_SEND_TEST_MESSAGE", "false").lower() == "true"
+
+    if test_message:
+        send_test_message()
+        return
 
     if run_once:
         run_check()
